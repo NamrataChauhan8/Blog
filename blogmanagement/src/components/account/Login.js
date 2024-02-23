@@ -1,7 +1,7 @@
+
 import React, { useState, useEffect, useContext } from 'react';
-import { TextField, Box, Button, Typography, styled, IconButton } from '@mui/material';
+import { TextField, Box, Button, Typography, styled } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { Visibility, VisibilityOff } from '@mui/icons-material'; // Import eye icons
 import API from '../../service/api';
 import { DataContext } from '../../context/DataProvider';
 
@@ -58,7 +58,7 @@ const Error = styled(Typography)`
     line-height: 0;
     margin-top: 10px;
     font-weight: 600;
-`
+`;
 
 const loginInitialValue = {
     username: '',
@@ -71,21 +71,17 @@ const signupInitialValue = {
 };
 
 const Login = ({ isUserAuthenticated }) => {
-    const [login, setLogin] = useState({ ...loginInitialValue });
-    const [signup, setSignup] = useState({ ...signupInitialValue });
-    const [loginError, setLoginError] = useState('');
-    const [signupError, setSignupError] = useState('');
+    const [login, setLogin] = useState({ ...loginInitialValue }); // Ensure initial values are defined
+    const [signup, setSignup] = useState({ ...signupInitialValue }); // Ensure initial values are defined
+    const [error, setError] = useState('');
     const [account, toggleAccount] = useState('login');
-    const [showPassword, setShowPassword] = useState(false);
-    const [showSignupPassword, setShowSignupPassword] = useState(false);
 
     const navigate = useNavigate();
     const { setAccount } = useContext(DataContext);
 
     useEffect(() => {
-        setLoginError('');
-        setSignupError('');
-    }, [login, signup])
+        setError(''); // Clear error state
+    }, [login])
 
     const onValueChange = (e) => {
         setLogin({ ...login, [e.target.name]: e.target.value });
@@ -97,69 +93,74 @@ const Login = ({ isUserAuthenticated }) => {
 
     const loginUser = async () => {
         if (!login.username || !login.password) {
-            setLoginError('Username and password are required.');
+            setError('Username and password are required.');
             return;
         }
-        let response = await API.userLogin(login);
-        if (response.isSuccess) {
-            setLoginError('');
-            sessionStorage.setItem('accessToken', `Bearer ${response.data.accessToken}`);
-            sessionStorage.setItem('refreshToken', `Bearer ${response.data.refreshToken}`);
-            setAccount({ name: response.data.name, username: response.data.username });
-            isUserAuthenticated(true)
-            navigate('/');
-        } else {
-            setLoginError('Incorrect username or password. Please try again.');
+
+        try {
+            const response = await API.userLogin(login);
+            if (response.isSuccess) {
+                setError('');
+                sessionStorage.setItem('accessToken', `Bearer ${response.data.accessToken}`);
+                sessionStorage.setItem('refreshToken', `Bearer ${response.data.refreshToken}`);
+                setAccount({ name: response.data.name, username: response.data.username });
+                isUserAuthenticated(true);
+                setLogin({ ...loginInitialValue });
+                navigate('/');
+            } else {
+                setError('Incorrect username or password. Please try again.');
+            }
+        } catch (error) {
+            alert('Incorrect username or password. Please try again.');
         }
     }
 
     const signupUser = async () => {
         if (!signup.name || !signup.username || !signup.password) {
-            setSignupError('All fields are required.');
+            setError('All fields are required.');
             return;
         }
-        let response = await API.userSignup(signup);
-        if (response.isSuccess) {
-            setSignupError('');
-            setSignup({ ...signupInitialValue });
-            toggleAccount('login');
-        } else {
-            setSignupError('Something went wrong! Please try again later.');
+
+        try {
+            const response = await API.userSignup(signup);
+            if (response.isSuccess) {
+                setError('');
+                setSignup({ ...signupInitialValue });
+                toggleAccount('login');
+            } else {
+                alert('Something went wrong! Please try again later.');
+            }
+        } catch (error) {
+            setError('Something went wrong! Please try again later.');
         }
     }
 
     const toggleSignup = () => {
-        account === 'signup' ? toggleAccount('login') : toggleAccount('signup');
+        toggleAccount(account === 'signup' ? 'login' : 'signup');
     }
-
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword);
-    };
-
-    const toggleSignupPasswordVisibility = () => {
-        setShowSignupPassword(!showSignupPassword);
-    };
 
     return (
         <PageContainer>
             <Component>
                 {account === 'login' ? (
                     <Wrapper>
-                        <TextField variant="standard" value={login.username} onChange={(e) => onValueChange(e)} name='username' label="Enter Username" required />
-                        <TextField variant="standard" value={login.password} onChange={(e) => onValueChange(e)} name='password' label="Enter Password" type={showPassword ? "text" : "password"} required />
-                        <IconButton onClick={togglePasswordVisibility}>{showPassword ? <VisibilityOff /> : <Visibility />}</IconButton>
-                        {loginError && <Error>{loginError}</Error>}
+                        <TextField variant="standard" value={login.username} onChange={(e) => onValueChange(e)} name='username' label="Enter Username" />
+                        <TextField  variant="standard" value={login.password} onChange={(e) => onValueChange(e)} name='password' label="Enter Password" />
+
+                        {error && <Error>{error}</Error>}
+
                         <LoginButton variant="contained" onClick={() => loginUser()}>Login</LoginButton>
                         <Text style={{ textAlign: 'center', marginTop: '10px' }}>OR</Text>
                         <SignUpButton onClick={toggleSignup}>Create an account</SignUpButton>
                     </Wrapper>
                 ) : (
                     <Wrapper>
-                        <TextField id="name" onChange={onInputChange} name="name" label="Enter Name" variant="standard" required />
-                        <TextField id="username" onChange={onInputChange} name="username" label="Enter Email" variant="standard" required />
-                        <TextField id="password" onChange={onInputChange} name="password" label="Enter Password" variant="standard" type={showSignupPassword ? "text" : "password"} required />
-                        <IconButton onClick={toggleSignupPasswordVisibility}>{showSignupPassword ? <VisibilityOff /> : <Visibility />}</IconButton>
-                        {signupError && <Error>{signupError}</Error>}
+                        <TextField id="name" onChange={onInputChange} name="name" label="Enter Name" variant="standard" />
+                        <TextField id="username" onChange={onInputChange} name="username" label="Enter Username" variant="standard" />
+                        <TextField id="password" onChange={onInputChange} name="password" label="Enter Password" variant="standard" />
+
+                        {error && <Error>{error}</Error>}
+
                         <SignUpButton onClick={signupUser} style={{ marginBottom: 50 }}>SignUp</SignUpButton>
                         <Text style={{ textAlign: 'center', marginTop: '20px' }}>OR</Text>
                         <LoginButton variant="contained" onClick={toggleSignup}> Already Have an account? </LoginButton>

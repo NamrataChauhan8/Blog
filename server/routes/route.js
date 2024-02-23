@@ -13,6 +13,7 @@ const storage = new GridFsStorage({ url: 'mongodb+srv://namratac:Namrata@cluster
 const router=express.Router();
 router.post('/signup', signupUser);
 router.post('/login', loginUser);
+// router.post('/check-username',checkUsername);
 // router.post('/file/upload', upload.single('file'), uploadImage);
 // router.get('/file/:filename', getImage);
 router.post('/create', authenticateToken ,createPost);

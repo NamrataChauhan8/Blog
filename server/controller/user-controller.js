@@ -57,3 +57,21 @@ export const logoutUser = async (request, response) => {
 
     response.status(204).json({ msg: 'logout successful' });
 }
+
+// export const checkUsername= async (request, response) => {
+//     try {
+//         const { username } = request.body;
+//         // Check if the username already exists in the database
+//         const existingUser = await User.findOne({ username });
+//         if (existingUser) {
+//             // If username exists, return true
+//             return response.json({ usernameExists: true });
+//         } else {
+//             // If username does not exist, return false
+//             return response.json({ usernameExists: false });
+//         }
+//     } catch (error) {
+//         console.error(error);
+//         return response.status(500).json({ error: 'Internal Server Error' });
+//     }
+// };
